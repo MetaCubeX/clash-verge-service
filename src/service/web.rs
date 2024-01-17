@@ -54,13 +54,16 @@ pub fn start_clash(body: StartBody) -> Result<()> {
         _ => vec!["-d", config_dir, "-f", config_file],
     };
 
-    let log = File::create(body.log_file).context("failed to open log")?;
-    let cmd = Command::new(body.bin_path).args(args).stdout(log).spawn()?;
-
+    let cmd;
+    if let Some(log_file) = body.log_file {
+        let log = File::create(log_file).context("failed to open log")?;
+         cmd = Command::new(body.bin_path).args(args).stdout(log).spawn()?;
+    } else {
+         cmd = Command::new(body.bin_path).args(args).spawn()?;
+    }
     let mut arc = ClashStatus::global().lock();
     arc.child = Some(cmd);
     arc.info = Some(body_cloned);
-
     Ok(())
 }
 
